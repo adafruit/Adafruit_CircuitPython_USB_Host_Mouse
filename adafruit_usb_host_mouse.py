@@ -127,39 +127,51 @@ class BootMouse:
     :param endpoint_address: The address of the mouse endpoint
     :param tilegrid: The TileGrid that holds the visible mouse cursor
     :param was_attached: Whether the usb device was attached to the kernel
+    :param scale: The scale of the group that the Mouse TileGrid will be put into.
+      Needed in order to properly clamp the mouse to the display bounds
     """
 
     def __init__(self, device, endpoint_address, tilegrid, was_attached, scale=1):  # noqa: PLR0913, too many args
         self.device = device
+
         self.tilegrid = tilegrid
+        """TileGrid containing the Mouse cursor graphic."""
+
         self.endpoint = endpoint_address
         self.buffer = array.array("b", [0] * 4)
         self.was_attached = was_attached
+
         self.scale = scale
+        """The scale of the group that the Mouse TileGrid will be put into.
+        Needed in order to properly clamp the mouse to the display bounds."""
+
+        self.sensitivity = 1
+        """The sensitivity of the mouse cursor. Larger values will make
+        the mouse cursor move slower relative to physical mouse movement. Default is 1."""
 
         self.display_size = (supervisor.runtime.display.width, supervisor.runtime.display.height)
 
     @property
-    def x(self):
+    def x(self) -> int:
         """
         The x coordinate of the mouse cursor
         """
         return self.tilegrid.x
 
     @x.setter
-    def x(self, new_x):
-        self.tilegrid.x = new_x
+    def x(self, new_x: int) -> None:
+        self.tilegrid.x = int(new_x)
 
     @property
-    def y(self):
+    def y(self) -> int:
         """
         The y coordinate of the mouse cursor
         """
         return self.tilegrid.y
 
     @y.setter
-    def y(self, new_y):
-        self.tilegrid.y = new_y
+    def y(self, new_y: int) -> None:
+        self.tilegrid.y = int(new_y)
 
     def release(self):
         """
@@ -191,10 +203,18 @@ class BootMouse:
         # update the mouse tilegrid x and y coordinates
         # based on the delta values read from the mouse
         self.tilegrid.x = max(
-            0, min((self.display_size[0] // self.scale) - 1, self.tilegrid.x + self.buffer[1])
+            0,
+            min(
+                (self.display_size[0] // self.scale) - 1,
+                self.tilegrid.x + int(round((self.buffer[1] // self.sensitivity), 0)),
+            ),
         )
         self.tilegrid.y = max(
-            0, min((self.display_size[1] // self.scale) - 1, self.tilegrid.y + self.buffer[2])
+            0,
+            min(
+                (self.display_size[1] // self.scale) - 1,
+                self.tilegrid.y + int(round((self.buffer[2] // self.sensitivity), 0)),
+            ),
         )
 
         pressed_btns = []
