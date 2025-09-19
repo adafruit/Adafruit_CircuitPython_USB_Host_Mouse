@@ -46,7 +46,7 @@ while True:
     out_str = f"{mouse.x},{mouse.y}"
 
     # add pressed buttons to out str
-    if pressed_btns is not None:
+    if pressed_btns is not None and len(pressed_btns) > 0:
         out_str += f" {" ".join(pressed_btns)}"
 
     # update the text label with the new coordinates
