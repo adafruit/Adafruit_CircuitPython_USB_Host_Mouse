@@ -43,11 +43,15 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_USB_Host_Mouse.gi
 BUTTONS = ["left", "right", "middle"]
 
 
-def find_and_init_boot_mouse(cursor_image="/launcher_assets/mouse_cursor.bmp"):
+def find_and_init_boot_mouse(cursor_image=None):  # noqa: PLR0912
     """
     Scan for an attached boot mouse connected via USB host.
     If one is found initialize an instance of BootMouse class
     and return it.
+
+    :param cursor_image: Provide the absolute path to the desired cursor bitmap image. If not
+      provided or set to `None`, the bitmap image included with this library will be used. If set as
+      `False`, the BootMouse instance will not control a :class:`displayio.TileGrid`.
     :return: The BootMouse instance or None if no mouse was found.
     """
     mouse_interface_index, mouse_endpoint_address = None, None
@@ -100,18 +104,24 @@ def find_and_init_boot_mouse(cursor_image="/launcher_assets/mouse_cursor.bmp"):
         # set configuration on the mouse so we can use it
         mouse_device.set_configuration()
 
+        # get path of included cursor bitmap
+        if cursor_image is None:
+            cursor_image = "/".join(__file__.split("/")[:-1]) + "/mouse_cursor.bmp"
+
         # load the mouse cursor bitmap
-        if not isinstance(cursor_image, str):
-            raise TypeError("cursor_image must be a string")
-        mouse_bmp = OnDiskBitmap(cursor_image)
+        if isinstance(cursor_image, str):
+            mouse_bmp = OnDiskBitmap(cursor_image)
 
-        # make the background pink pixels transparent
-        mouse_bmp.pixel_shader.make_transparent(0)
+            # make the background pink pixels transparent
+            mouse_bmp.pixel_shader.make_transparent(0)
 
-        # create a TileGrid for the mouse, using its bitmap and pixel_shader
-        mouse_tg = TileGrid(mouse_bmp, pixel_shader=mouse_bmp.pixel_shader)
+            # create a TileGrid for the mouse, using its bitmap and pixel_shader
+            mouse_tg = TileGrid(mouse_bmp, pixel_shader=mouse_bmp.pixel_shader)
 
-        return BootMouse(mouse_device, mouse_endpoint_address, mouse_tg, mouse_was_attached)
+        else:
+            mouse_tg = None
+
+        return BootMouse(mouse_device, mouse_endpoint_address, mouse_was_attached, mouse_tg)
 
     # if no mouse found
     return None
@@ -125,41 +135,55 @@ class BootMouse:
 
     :param device: The usb device instance for the mouse
     :param endpoint_address: The address of the mouse endpoint
-    :param tilegrid: The TileGrid that holds the visible mouse cursor
     :param was_attached: Whether the usb device was attached to the kernel
+    :param tilegrid: The TileGrid that holds the visible mouse cursor
     """
 
-    def __init__(self, device, endpoint_address, tilegrid, was_attached, scale=1):  # noqa: PLR0913, too many args
+    def __init__(self, device, endpoint_address, was_attached, tilegrid=None, scale=1):  # noqa: PLR0913, too many args
         self.device = device
-        self.tilegrid = tilegrid
         self.endpoint = endpoint_address
         self.buffer = array.array("b", [0] * 4)
         self.was_attached = was_attached
+        self.tilegrid = tilegrid
         self.scale = scale
-
-        self.display_size = (supervisor.runtime.display.width, supervisor.runtime.display.height)
+        if tilegrid is not None:
+            self.display_size = (
+                supervisor.runtime.display.width,
+                supervisor.runtime.display.height,
+            )
+            self.tilegrid.x, self.tilegrid.y = (
+                x // 2 for x in self.display_size
+            )  # center cursor in display
+        else:
+            self._x, self._y = 0, 0
 
     @property
     def x(self):
         """
         The x coordinate of the mouse cursor
         """
-        return self.tilegrid.x
+        return self.tilegrid.x if self.tilegrid else self._x
 
     @x.setter
     def x(self, new_x):
-        self.tilegrid.x = new_x
+        if self.tilegrid:
+            self.tilegrid.x = new_x
+        else:
+            self._x = new_x
 
     @property
     def y(self):
         """
         The y coordinate of the mouse cursor
         """
-        return self.tilegrid.y
+        return self.tilegrid.y if self.tilegrid else self._y
 
     @y.setter
     def y(self, new_y):
-        self.tilegrid.y = new_y
+        if self.tilegrid:
+            self.tilegrid.y = new_y
+        else:
+            self._y = new_y
 
     def release(self):
         """
@@ -188,14 +212,19 @@ class BootMouse:
         except usb.core.USBError:
             return None
 
-        # update the mouse tilegrid x and y coordinates
+        # update the mouse x and y coordinates
         # based on the delta values read from the mouse
-        self.tilegrid.x = max(
-            0, min((self.display_size[0] // self.scale) - 1, self.tilegrid.x + self.buffer[1])
-        )
-        self.tilegrid.y = max(
-            0, min((self.display_size[1] // self.scale) - 1, self.tilegrid.y + self.buffer[2])
-        )
+        dx, dy = self.buffer[1:3]
+        if self.tilegrid:
+            self.tilegrid.x = max(
+                0, min((self.display_size[0] // self.scale) - 1, self.tilegrid.x + dx)
+            )
+            self.tilegrid.y = max(
+                0, min((self.display_size[1] // self.scale) - 1, self.tilegrid.y + dy)
+            )
+        else:
+            self._x += dx
+            self._y += dy
 
         pressed_btns = []
         for i, button in enumerate(BUTTONS):
