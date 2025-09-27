@@ -149,6 +149,11 @@ class BootMouse:
         """The sensitivity of the mouse cursor. Larger values will make
         the mouse cursor move slower relative to physical mouse movement. Default is 1."""
 
+        self.pressed_btns = []
+        """List of buttons currently pressed (one or more of "left", "right", "middle")
+        If there's no new mouse data (nothing changes) this property can be checked to see
+        which buttons are currently pressed."""
+
         self.display_size = (supervisor.runtime.display.width, supervisor.runtime.display.height)
 
     @property
@@ -218,13 +223,13 @@ class BootMouse:
             ),
         )
 
-        pressed_btns = []
+        self.pressed_btns = []
         for i, button in enumerate(BUTTONS):
             # check if each button is pressed using bitwise AND shifted
             # to the appropriate index for this button
             if self.buffer[0] & (1 << i) != 0:
                 # append the button name to the string to show if
                 # it is being clicked.
-                pressed_btns.append(button)
+                self.pressed_btns.append(button)
 
-        return tuple(pressed_btns)
+        return tuple(self.pressed_btns)
