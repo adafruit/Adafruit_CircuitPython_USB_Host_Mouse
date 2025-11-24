@@ -130,8 +130,7 @@ def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
     and return it.
 
     :param cursor_image: Provide the absolute path to the desired cursor bitmap image. If set as
-      `None`, the :class:`ReportMouse` instance will not control
-              a :class:`displayio.TileGrid` object.
+      `None`, the :class:`ReportMouse` will not control a :class:`displayio.TileGrid` object.
     :return: The :class:`ReportMouse` instance or None if no mouse was found.
     """
     mouse_interface_index, mouse_endpoint_address = None, None
