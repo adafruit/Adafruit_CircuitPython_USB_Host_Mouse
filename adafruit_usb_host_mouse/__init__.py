@@ -122,6 +122,7 @@ def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
     # if no mouse found
     return None
 
+
 def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
     """
     Scan for an attached report mouse connected via USB host.
@@ -129,7 +130,8 @@ def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
     and return it.
 
     :param cursor_image: Provide the absolute path to the desired cursor bitmap image. If set as
-      `None`, the :class:`ReportMouse` instance will not control a :class:`displayio.TileGrid` object.
+      `None`, the :class:`ReportMouse` instance will not control
+              a :class:`displayio.TileGrid` object.
     :return: The :class:`ReportMouse` instance or None if no mouse was found.
     """
     mouse_interface_index, mouse_endpoint_address = None, None
@@ -200,7 +202,8 @@ def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
     # if no mouse found
     return None
 
-class BootMouse():
+
+class BootMouse:
     """
     Helpler class that encapsulates the objects needed to interact with a boot
     mouse, show a visible cursor on the display, and determine when buttons
@@ -307,7 +310,7 @@ class BootMouse():
         # update the mouse x and y coordinates
         # based on the delta values read from the mouse
         # Standard Boot Mouse: 3 bytes [Btn, X, Y]
-    
+
         dx, dy = self.buffer[1:3]
         dx = int(round((dx / self.sensitivity), 0))
         dy = int(round((dy / self.sensitivity), 0))
@@ -333,8 +336,8 @@ class BootMouse():
 
         return tuple(self.pressed_btns)
 
-class ReportMouse(BootMouse):
 
+class ReportMouse(BootMouse):
     def __init__(self, device, endpoint_address, was_attached, tilegrid=None, scale=1):  # noqa: PLR0913, too many args
         super().__init__(device, endpoint_address, was_attached, tilegrid, scale)
 
@@ -363,7 +366,7 @@ class ReportMouse(BootMouse):
         # Mouse with Report ID: 4 bytes [ID, Btn, X, Y]
         offset = 1
 
-        dx, dy = self.buffer[1 + offset:3 + offset]
+        dx, dy = self.buffer[1 + offset : 3 + offset]
         dx = int(round((dx / self.sensitivity), 0))
         dy = int(round((dy / self.sensitivity), 0))
         if self.tilegrid:
@@ -387,4 +390,3 @@ class ReportMouse(BootMouse):
                 self.pressed_btns.append(button)
 
         return tuple(self.pressed_btns)
-
