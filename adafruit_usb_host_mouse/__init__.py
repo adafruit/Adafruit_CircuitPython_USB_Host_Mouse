@@ -181,8 +181,7 @@ def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
     if mouse_device is not None:
         # detach the kernel driver if needed
         # Typically HID devices have interfaces 0,1,2
-        # Trying 0..mouse_iface is safe and sufficient
-        for intf in range(mouse_interface_index + 1):
+        for intf in range(3):
             if mouse_device.is_kernel_driver_active(intf):
                 mouse_was_attached = True
                 mouse_device.detach_kernel_driver(intf)
