@@ -177,14 +177,15 @@ def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
         except usb.core.USBError as e:
             print_exception(e, e, None)
 
-    mouse_was_attached = None
+    mouse_was_attached = False
     if mouse_device is not None:
         # detach the kernel driver if needed
-        if mouse_device.is_kernel_driver_active(mouse_interface_index):
-            mouse_was_attached = True
-            mouse_device.detach_kernel_driver(mouse_interface_index)
-        else:
-            mouse_was_attached = False
+        # Typically HID devices have interfaces 0,1,2
+        # Trying 0..mouse_iface is safe and sufficient
+        for intf in range(mouse_interface_index + 1):
+            if mouse_device.is_kernel_driver_active(intf):
+                mouse_was_attached = True
+                mouse_device.detach_kernel_driver(intf)
 
         # set configuration on the mouse so we can use it
         mouse_device.set_configuration()
