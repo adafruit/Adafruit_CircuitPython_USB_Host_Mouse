@@ -122,7 +122,7 @@ def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
             mouse_interface_index,
             mouse_endpoint_address,
             mouse_was_attached,
-            mouse_tg
+            tilegrid=mouse_tg,
         )
 
     # if no mouse found
@@ -207,7 +207,7 @@ def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
             mouse_interface_index,
             mouse_endpoint_address,
             mouse_was_attached,
-            mouse_tg
+            tilegrid=mouse_tg,
         )
 
     # if no mouse found
@@ -229,16 +229,9 @@ class BootMouse:
       Needed in order to properly clamp the mouse to the display bounds
     """
 
-    def __init__(
-        self,
-        device,
-        interface_index,
-        endpoint_address,
-        was_attached,
-        tilegrid=None,
-        scale=1
-    ):  # noqa: PLR0913, too many args
-
+    def __init__(  # noqa: PLR0913, too many args
+        self, device, interface_index, endpoint_address, was_attached, *, tilegrid=None, scale=1
+    ):
         self.device = device
 
         self.tilegrid = tilegrid
@@ -360,23 +353,11 @@ class BootMouse:
 
 
 class ReportMouse(BootMouse):
-    def __init__(
-        self,
-        device,
-        interface_index,
-        endpoint_address,
-        was_attached,
-        tilegrid=None,
-        scale=1
-        ):  # noqa: PLR0913, too many args
-        
+    def __init__(  # noqa: PLR0913, too many args
+        self, device, interface_index, endpoint_address, was_attached, *, tilegrid=None, scale=1
+    ):
         super().__init__(
-            device,
-            interface_index,
-            endpoint_address,
-            was_attached,
-            tilegrid,
-            scale
+            device, interface_index, endpoint_address, was_attached, tilegrid=tilegrid, scale=scale
         )
 
     def update(self):
