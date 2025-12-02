@@ -95,9 +95,9 @@ def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
     mouse_was_attached = None
     if mouse_device is not None:
         # detach the kernel driver if needed
-        if mouse_device.is_kernel_driver_active(0):
+        if mouse_device.is_kernel_driver_active(mouse_interface_index):
             mouse_was_attached = True
-            mouse_device.detach_kernel_driver(0)
+            mouse_device.detach_kernel_driver(mouse_interface_index)
         else:
             mouse_was_attached = False
 
@@ -117,7 +117,13 @@ def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
         else:
             mouse_tg = None
 
-        return BootMouse(mouse_device, mouse_endpoint_address, mouse_was_attached, mouse_tg)
+        return BootMouse(
+            mouse_device,
+            mouse_interface_index,
+            mouse_endpoint_address,
+            mouse_was_attached,
+            mouse_tg
+        )
 
     # if no mouse found
     return None
@@ -174,9 +180,9 @@ def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
     mouse_was_attached = None
     if mouse_device is not None:
         # detach the kernel driver if needed
-        if mouse_device.is_kernel_driver_active(0):
+        if mouse_device.is_kernel_driver_active(mouse_interface_index):
             mouse_was_attached = True
-            mouse_device.detach_kernel_driver(0)
+            mouse_device.detach_kernel_driver(mouse_interface_index)
         else:
             mouse_was_attached = False
 
@@ -196,7 +202,13 @@ def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
         else:
             mouse_tg = None
 
-        return ReportMouse(mouse_device, mouse_endpoint_address, mouse_was_attached, mouse_tg)
+        return ReportMouse(
+            mouse_device,
+            mouse_interface_index,
+            mouse_endpoint_address,
+            mouse_was_attached,
+            mouse_tg
+        )
 
     # if no mouse found
     return None
@@ -209,6 +221,7 @@ class BootMouse:
     were pressed.
 
     :param device: The usb device instance for the mouse
+    :param interface_index: The USB interface index of the mouse
     :param endpoint_address: The address of the mouse endpoint
     :param was_attached: Whether the usb device was attached to the kernel
     :param tilegrid: The TileGrid that holds the visible mouse cursor
@@ -216,12 +229,22 @@ class BootMouse:
       Needed in order to properly clamp the mouse to the display bounds
     """
 
-    def __init__(self, device, endpoint_address, was_attached, tilegrid=None, scale=1):  # noqa: PLR0913, too many args
+    def __init__(
+        self,
+        device,
+        interface_index,
+        endpoint_address,
+        was_attached,
+        tilegrid=None,
+        scale=1
+    ):  # noqa: PLR0913, too many args
+
         self.device = device
 
         self.tilegrid = tilegrid
         """TileGrid containing the Mouse cursor graphic."""
 
+        self.interface = interface_index
         self.endpoint = endpoint_address
         self.buffer = array.array("b", [0] * 4)
         self.was_attached = was_attached
@@ -337,8 +360,24 @@ class BootMouse:
 
 
 class ReportMouse(BootMouse):
-    def __init__(self, device, endpoint_address, was_attached, tilegrid=None, scale=1):  # noqa: PLR0913, too many args
-        super().__init__(device, endpoint_address, was_attached, tilegrid, scale)
+    def __init__(
+        self,
+        device,
+        interface_index,
+        endpoint_address,
+        was_attached,
+        tilegrid=None,
+        scale=1
+        ):  # noqa: PLR0913, too many args
+        
+        super().__init__(
+            device,
+            interface_index,
+            endpoint_address,
+            was_attached,
+            tilegrid,
+            scale
+        )
 
     def update(self):
         """
