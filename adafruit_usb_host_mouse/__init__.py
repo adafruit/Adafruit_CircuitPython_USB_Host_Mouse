@@ -96,7 +96,7 @@ def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
     if mouse_device is not None:
         # detach the kernel driver if needed
         if mouse_device.is_kernel_driver_active(mouse_interface_index):
-            mouse_was_attached = [[mouse_interface_index]]
+            mouse_was_attached = [mouse_interface_index]
             mouse_device.detach_kernel_driver(mouse_interface_index)
 
         # set configuration on the mouse so we can use it
@@ -186,7 +186,7 @@ def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
                 mouse_device.detach_kernel_driver(intf)
 
         if len(_attach_list) > 0:
-            mouse_was_attached = [_attach_list]
+            mouse_was_attached = _attach_list
 
         # set configuration on the mouse so we can use it
         mouse_device.set_configuration()
@@ -304,7 +304,7 @@ class BootMouse:
         # was_attached is an empty list if no interfaces were detached from the kernel
         if self.was_attached:
             # the first element of the was_attached list is a list of detached interfaces
-            for intf in self.was_attached[0]:
+            for intf in self.was_attached:
                 if not self.device.is_kernel_driver_active(intf):
                     self.device.attach_kernel_driver(intf)
 
