@@ -43,8 +43,11 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_USB_Host_Mouse.gi
 BUTTONS = ["left", "right", "middle"]
 DEFAULT_CURSOR = "/".join(__file__.split("/")[:-1]) + "/mouse_cursor.bmp"
 
+SUBCLASS_BOOT = 0x01
+SUBCLASS_RESERVED = 0x00
 
-def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
+
+def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT):  # noqa: PLR0912
     """
     Scan for an attached boot mouse connected via USB host.
     If one is found initialize an instance of :class:`BootMouse` class
@@ -56,9 +59,17 @@ def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
     """
     mouse_interface_index, mouse_endpoint_address = None, None
     mouse_device = None
+    if subclass == SUBCLASS_BOOT:
+        deviceType = "boot"
+        find_endpoint = adafruit_usb_host_descriptors.find_boot_mouse_endpoint
+        returnClass = BootMouse
+    else:
+        deviceType = "report"
+        find_endpoint = adafruit_usb_host_descriptors.find_report_mouse_endpoint
+        returnClass = ReportMouse
 
     # scan for connected USB device and loop over any found
-    print("scanning usb (boot)")
+    print(f"scanning usb ({deviceType})")
     for device in usb.core.find(find_all=True):
         # print device info
         try:
@@ -76,9 +87,7 @@ def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
             )
             print(config_descriptor)
 
-            _possible_interface_index, _possible_endpoint_address = (
-                adafruit_usb_host_descriptors.find_boot_mouse_endpoint(device)
-            )
+            _possible_interface_index, _possible_endpoint_address = find_endpoint(device)
             if _possible_interface_index is not None and _possible_endpoint_address is not None:
                 mouse_device = device
                 mouse_interface_index = _possible_interface_index
@@ -88,16 +97,22 @@ def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
                     + f"endpoint_address: {hex(mouse_endpoint_address)}"
                 )
                 break
-            print("was not a boot mouse")
+            print(f"was not a {deviceType} mouse")
         except usb.core.USBError as e:
             print_exception(e, e, None)
 
     mouse_was_attached = []
     if mouse_device is not None:
         # detach the kernel driver if needed
-        if mouse_device.is_kernel_driver_active(mouse_interface_index):
-            mouse_was_attached = [mouse_interface_index]
-            mouse_device.detach_kernel_driver(mouse_interface_index)
+        if subclass == SUBCLASS_BOOT:
+            possible_interfaces = [mouse_interface_index]
+        else:
+            possible_interfaces = [0, 1, 2]
+
+        for intf in possible_interfaces:
+            if mouse_device.is_kernel_driver_active(intf):
+                mouse_was_attached.append(intf)
+                mouse_device.detach_kernel_driver(intf)
 
         # set configuration on the mouse so we can use it
         mouse_device.set_configuration()
@@ -115,7 +130,7 @@ def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
         else:
             mouse_tg = None
 
-        return BootMouse(
+        return returnClass(
             mouse_device,
             mouse_interface_index,
             mouse_endpoint_address,
@@ -137,83 +152,7 @@ def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
       `None`, the :class:`ReportMouse` will not control a :class:`displayio.TileGrid` object.
     :return: The :class:`ReportMouse` instance or None if no mouse was found.
     """
-    mouse_interface_index, mouse_endpoint_address = None, None
-    mouse_device = None
-
-    # scan for connected USB device and loop over any found
-    print("scanning usb (report)")
-    for device in usb.core.find(find_all=True):
-        # print device info
-        try:
-            try:
-                print(f"{device.idVendor:04x}:{device.idProduct:04x}")
-            except usb.core.USBError as e:
-                print_exception(e, e, None)
-            try:
-                print(device.manufacturer, device.product)
-            except usb.core.USBError as e:
-                print_exception(e, e, None)
-            print()
-            config_descriptor = adafruit_usb_host_descriptors.get_configuration_descriptor(
-                device, 0
-            )
-            print(config_descriptor)
-
-            _possible_interface_index, _possible_endpoint_address = (
-                adafruit_usb_host_descriptors.find_report_mouse_endpoint(device)
-            )
-            if _possible_interface_index is not None and _possible_endpoint_address is not None:
-                mouse_device = device
-                mouse_interface_index = _possible_interface_index
-                mouse_endpoint_address = _possible_endpoint_address
-                print(
-                    f"mouse interface: {mouse_interface_index} "
-                    + f"endpoint_address: {hex(mouse_endpoint_address)}"
-                )
-                break
-            print("was not a report mouse")
-        except usb.core.USBError as e:
-            print_exception(e, e, None)
-
-    mouse_was_attached = []
-    _attach_list = []
-    if mouse_device is not None:
-        # detach the kernel driver if needed
-        # Typically HID devices have interfaces 0,1,2
-        for intf in range(3):
-            if mouse_device.is_kernel_driver_active(intf):
-                _attach_list.append(intf)
-                mouse_device.detach_kernel_driver(intf)
-
-        if len(_attach_list) > 0:
-            mouse_was_attached = _attach_list
-
-        # set configuration on the mouse so we can use it
-        mouse_device.set_configuration()
-
-        # load the mouse cursor bitmap
-        if isinstance(cursor_image, str):
-            mouse_bmp = OnDiskBitmap(cursor_image)
-
-            # make the background pink pixels transparent
-            mouse_bmp.pixel_shader.make_transparent(0)
-
-            # create a TileGrid for the mouse, using its bitmap and pixel_shader
-            mouse_tg = TileGrid(mouse_bmp, pixel_shader=mouse_bmp.pixel_shader)
-
-        else:
-            mouse_tg = None
-
-        return ReportMouse(
-            mouse_device,
-            mouse_interface_index,
-            mouse_endpoint_address,
-            mouse_was_attached,
-            tilegrid=mouse_tg,
-        )
-
-    # if no mouse found
-    return None
+    return find_and_init_boot_mouse(cursor_image, SUBCLASS_RESERVED)
 
 
 class BootMouse:
