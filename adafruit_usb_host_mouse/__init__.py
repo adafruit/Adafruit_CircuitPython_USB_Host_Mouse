@@ -225,9 +225,9 @@ class BootMouse:
     :param device: The usb device instance for the mouse
     :param interface_index: The USB interface index of the mouse
     :param endpoint_address: The address of the mouse endpoint
-    :param was_attached: A list of the usb devices detached from the kernel.
+    :param was_attached: A list of the usb devices detached from the kernel
     :param tilegrid: The TileGrid that holds the visible mouse cursor
-    :param scale: The scale of the group that the Mouse TileGrid will be put into.
+    :param scale: The scale of the group that the Mouse TileGrid will be put into
       Needed in order to properly clamp the mouse to the display bounds
     """
 
@@ -367,9 +367,9 @@ class ReportMouse(BootMouse):
     :param device: The usb device instance for the mouse
     :param interface_index: The USB interface index of the mouse
     :param endpoint_address: The address of the mouse endpoint
-    :param was_attached: A list of the usb devices detached from the kernel.
+    :param was_attached: A list of the usb devices detached from the kernel
     :param tilegrid: The TileGrid that holds the visible mouse cursor
-    :param scale: The scale of the group that the Mouse TileGrid will be put into.
+    :param scale: The scale of the group that the Mouse TileGrid will be put into
       Needed in order to properly clamp the mouse to the display bounds
     """
 
