@@ -225,7 +225,7 @@ class BootMouse:
     :param device: The usb device instance for the mouse
     :param interface_index: The USB interface index of the mouse
     :param endpoint_address: The address of the mouse endpoint
-    :param was_attached: Whether the usb device was attached to the kernel
+    :param was_attached: A list of the usb devices detached from the kernel.
     :param tilegrid: The TileGrid that holds the visible mouse cursor
     :param scale: The scale of the group that the Mouse TileGrid will be put into.
       Needed in order to properly clamp the mouse to the display bounds
@@ -359,6 +359,20 @@ class BootMouse:
 
 
 class ReportMouse(BootMouse):
+    """
+    Helpler class that encapsulates the objects needed to interact with a non-Boot
+    mouse (Report), show a visible cursor on the display, and determine when buttons
+    were pressed. The class is a subclass of BootMouse that overrides the update method.
+
+    :param device: The usb device instance for the mouse
+    :param interface_index: The USB interface index of the mouse
+    :param endpoint_address: The address of the mouse endpoint
+    :param was_attached: A list of the usb devices detached from the kernel.
+    :param tilegrid: The TileGrid that holds the visible mouse cursor
+    :param scale: The scale of the group that the Mouse TileGrid will be put into.
+      Needed in order to properly clamp the mouse to the display bounds
+    """
+
     def __init__(  # noqa: PLR0913, too many args
         self, device, interface_index, endpoint_address, was_attached, *, tilegrid=None, scale=1
     ):
