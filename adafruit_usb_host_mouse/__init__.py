@@ -47,7 +47,7 @@ SUBCLASS_BOOT = 0x01
 SUBCLASS_RESERVED = 0x00
 
 
-def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT):  # noqa: PLR0912
+def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT):
     """
     Scan for an attached mouse connected via USB host.
     If one is found return a tuple containing the parameters needed to initalize an
@@ -66,12 +66,11 @@ def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT):  #
     """
     mouse_interface_index, mouse_endpoint_address = None, None
     mouse_device = None
-    if subclass == SUBCLASS_BOOT:
-        deviceType = "boot"
-        find_endpoint = adafruit_usb_host_descriptors.find_boot_mouse_endpoint
-    else:
-        deviceType = "report"
-        find_endpoint = adafruit_usb_host_descriptors.find_report_mouse_endpoint
+    deviceType, find_endpoint = (
+        ("boot", adafruit_usb_host_descriptors.find_boot_mouse_endpoint)
+        if subclass == SUBCLASS_BOOT
+        else ("report", adafruit_usb_host_descriptors.find_report_mouse_endpoint)
+    )
 
     # scan for connected USB device and loop over any found
     print(f"scanning usb ({deviceType})")
@@ -109,10 +108,7 @@ def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT):  #
     mouse_was_attached = []
     if mouse_device is not None:
         # detach the kernel driver if needed
-        if subclass == SUBCLASS_BOOT:
-            possible_interfaces = [mouse_interface_index]
-        else:
-            possible_interfaces = [0, 1, 2]
+        possible_interfaces = [mouse_interface_index] if subclass == SUBCLASS_BOOT else [0, 1, 2]
 
         for intf in possible_interfaces:
             if mouse_device.is_kernel_driver_active(intf):
@@ -123,6 +119,7 @@ def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT):  #
         mouse_device.set_configuration()
 
         # load the mouse cursor bitmap
+        mouse_tg = None
         if isinstance(cursor_image, str):
             mouse_bmp = OnDiskBitmap(cursor_image)
 
@@ -131,9 +128,6 @@ def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT):  #
 
             # create a TileGrid for the mouse, using its bitmap and pixel_shader
             mouse_tg = TileGrid(mouse_bmp, pixel_shader=mouse_bmp.pixel_shader)
-
-        else:
-            mouse_tg = None
 
         return (
             (mouse_device, mouse_interface_index, mouse_endpoint_address, mouse_was_attached),
@@ -144,7 +138,7 @@ def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT):  #
     return None
 
 
-def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR, scale=1):  # noqa: PLR0912
+def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR, scale=1):
     """
     Scan for an attached boot mouse connected via USB host.
     If one is found initialize an instance of :class:`BootMouse` class
@@ -163,7 +157,7 @@ def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR, scale=1):  # noqa: PLR
         return None
 
 
-def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR, scale=1):  # noqa: PLR0912
+def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR, scale=1):
     """
     Scan for an attached report mouse connected via USB host.
     If one is found initialize an instance of :class:`ReportMouse` class
