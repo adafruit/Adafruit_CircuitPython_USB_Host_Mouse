@@ -47,7 +47,7 @@ SUBCLASS_BOOT = 0x01
 SUBCLASS_RESERVED = 0x00
 
 
-def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, scale=1, subclass=SUBCLASS_BOOT):  # noqa: PLR0912
+def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT):  # noqa: PLR0912
     """
     Scan for an attached mouse connected via USB host.
     If one is found return a tuple containing the parameters needed to initalize an
@@ -57,8 +57,6 @@ def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, scale=1, subclass=SUBCLASS_
     :param cursor_image: Provide the absolute path to the desired cursor bitmap image. If set as
       `None`, the object instance created using the returned tuple will not control
       a :class:`displayio.TileGrid` object.
-    :param scale: The scale of the group that the Mouse TileGrid will be put into
-      Needed in order to properly clamp the mouse to the display bounds
     :param subclass: Defines whether to search for boot or non-boot mice.
       `0x01`, a boot mouse will be searched for
       `0x02`, a non-boot (report) mouse will be searched for
@@ -140,7 +138,6 @@ def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, scale=1, subclass=SUBCLASS_
         return (
             (mouse_device, mouse_interface_index, mouse_endpoint_address, mouse_was_attached),
             mouse_tg,
-            scale,
         )
 
     # if no mouse found
@@ -159,9 +156,9 @@ def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR, scale=1):  # noqa: PLR
       Needed in order to properly clamp the mouse to the display bounds
     :return: The :class:`BootMouse` instance or None if no mouse was found.
     """
-    found_mouse = find_and_init_mouse(cursor_image, scale, SUBCLASS_BOOT)
+    found_mouse = find_and_init_mouse(cursor_image, SUBCLASS_BOOT)
     if found_mouse is not None:
-        return BootMouse(*found_mouse[0], tilegrid=found_mouse[1], scale=found_mouse[2])
+        return BootMouse(*found_mouse[0], tilegrid=found_mouse[1], scale=scale)
     else:
         return None
 
@@ -178,9 +175,9 @@ def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR, scale=1):  # noqa: P
       Needed in order to properly clamp the mouse to the display bounds
     :return: The :class:`ReportMouse` instance or None if no mouse was found.
     """
-    found_mouse = find_and_init_mouse(cursor_image, scale, SUBCLASS_RESERVED)
+    found_mouse = find_and_init_mouse(cursor_image, SUBCLASS_RESERVED)
     if found_mouse is not None:
-        return ReportMouse(*found_mouse[0], tilegrid=found_mouse[1], scale=found_mouse[2])
+        return ReportMouse(*found_mouse[0], tilegrid=found_mouse[1], scale=scale)
     else:
         return None
 
