@@ -58,8 +58,8 @@ def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT):
       `None`, the object instance created using the returned tuple will not control
       a :class:`displayio.TileGrid` object.
     :param subclass: Defines whether to search for boot or non-boot mice.
-      `SUBCLASS_BOOT` (0X01), a boot mouse will be searched for
-      `SUBCLASS_RESERVED` (0x02), a non-boot (report) mouse will be searched for
+      SUBCLASS_BOOT (0X01), a boot mouse will be searched for
+      SUBCLASS_RESERVED (0x02), a non-boot (report) mouse will be searched for
     :return: A tupple cotaining the arguments needed to inialize a :class:`BootMouse`
       or `ReportMouse` instance depending on the value of subclass. If no mouse is found
       None is returned.
