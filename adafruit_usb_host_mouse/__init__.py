@@ -263,7 +263,7 @@ class BootMouse:
         """
         # was_attached is an empty list if no interfaces were detached from the kernel
         if self.was_attached:
-            # the first element of the was_attached list is a list of detached interfaces
+            # was_attached is a list of detached interfaces
             for intf in self.was_attached:
                 if not self.device.is_kernel_driver_active(intf):
                     self.device.attach_kernel_driver(intf)
