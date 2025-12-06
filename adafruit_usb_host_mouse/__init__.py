@@ -47,26 +47,33 @@ SUBCLASS_BOOT = 0x01
 SUBCLASS_RESERVED = 0x00
 
 
-def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT):  # noqa: PLR0912
+def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, scale=1, subclass=SUBCLASS_BOOT):  # noqa: PLR0912
     """
-    Scan for an attached boot mouse connected via USB host.
-    If one is found initialize an instance of :class:`BootMouse` class
-    and return it.
+    Scan for an attached mouse connected via USB host.
+    If one is found return a tuple containing the parameters needed to initalize an
+    instance of :class: `BootMouse` or :class: `ReportMouse` depending on the value of
+    the subclass parameter.
 
     :param cursor_image: Provide the absolute path to the desired cursor bitmap image. If set as
-      `None`, the :class:`BootMouse` instance will not control a :class:`displayio.TileGrid` object.
-    :return: The :class:`BootMouse` instance or None if no mouse was found.
+      `None`, the object instance created using the returned tuple will not control
+      a :class:`displayio.TileGrid` object.
+    :param scale: The scale of the group that the Mouse TileGrid will be put into
+      Needed in order to properly clamp the mouse to the display bounds
+    :param subclass: Defines whether to search for boot or non-boot mice.
+      `0x01`, a boot mouse will be searched for
+      `0x02`, a non-boot (report) mouse will be searched for
+    :return: A tupple cotaining the arguments needed to inialize a :class:`BootMouse`
+      or `ReportMouse` instance depending on the value of subclass. If no mouse is found
+      None is returned.
     """
     mouse_interface_index, mouse_endpoint_address = None, None
     mouse_device = None
     if subclass == SUBCLASS_BOOT:
         deviceType = "boot"
         find_endpoint = adafruit_usb_host_descriptors.find_boot_mouse_endpoint
-        returnClass = BootMouse
     else:
         deviceType = "report"
         find_endpoint = adafruit_usb_host_descriptors.find_report_mouse_endpoint
-        returnClass = ReportMouse
 
     # scan for connected USB device and loop over any found
     print(f"scanning usb ({deviceType})")
@@ -130,19 +137,36 @@ def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT
         else:
             mouse_tg = None
 
-        return returnClass(
-            mouse_device,
-            mouse_interface_index,
-            mouse_endpoint_address,
-            mouse_was_attached,
-            tilegrid=mouse_tg,
+        return (
+            (mouse_device, mouse_interface_index, mouse_endpoint_address, mouse_was_attached),
+            mouse_tg,
+            scale,
         )
 
     # if no mouse found
     return None
 
 
-def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
+def find_and_init_boot_mouse(cursor_image=DEFAULT_CURSOR, scale=1):  # noqa: PLR0912
+    """
+    Scan for an attached boot mouse connected via USB host.
+    If one is found initialize an instance of :class:`BootMouse` class
+    and return it.
+
+    :param cursor_image: Provide the absolute path to the desired cursor bitmap image. If set as
+      `None`, the :class:`BootMouse` instance will not control a :class:`displayio.TileGrid` object
+    :param scale: The scale of the group that the Mouse TileGrid will be put into
+      Needed in order to properly clamp the mouse to the display bounds
+    :return: The :class:`BootMouse` instance or None if no mouse was found.
+    """
+    found_mouse = find_and_init_mouse(cursor_image, scale, SUBCLASS_BOOT)
+    if found_mouse is not None:
+        return BootMouse(*found_mouse[0], tilegrid=found_mouse[1], scale=found_mouse[2])
+    else:
+        return None
+
+
+def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR, scale=1):  # noqa: PLR0912
     """
     Scan for an attached report mouse connected via USB host.
     If one is found initialize an instance of :class:`ReportMouse` class
@@ -150,9 +174,15 @@ def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR):  # noqa: PLR0912
 
     :param cursor_image: Provide the absolute path to the desired cursor bitmap image. If set as
       `None`, the :class:`ReportMouse` will not control a :class:`displayio.TileGrid` object.
+    :param scale: The scale of the group that the Mouse TileGrid will be put into
+      Needed in order to properly clamp the mouse to the display bounds
     :return: The :class:`ReportMouse` instance or None if no mouse was found.
     """
-    return find_and_init_boot_mouse(cursor_image, SUBCLASS_RESERVED)
+    found_mouse = find_and_init_mouse(cursor_image, scale, SUBCLASS_RESERVED)
+    if found_mouse is not None:
+        return ReportMouse(*found_mouse[0], tilegrid=found_mouse[1], scale=found_mouse[2])
+    else:
+        return None
 
 
 class BootMouse:
