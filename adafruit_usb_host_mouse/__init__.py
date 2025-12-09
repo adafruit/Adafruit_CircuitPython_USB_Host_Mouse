@@ -59,10 +59,9 @@ def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT):
       a :class:`displayio.TileGrid` object.
     :param subclass: Defines whether to search for boot or non-boot mice.
       SUBCLASS_BOOT (0X01), a boot mouse will be searched for
-      SUBCLASS_RESERVED (0x02), a non-boot (report) mouse will be searched for
-    :return: A tupple cotaining the arguments needed to inialize a :class:`BootMouse`
-      or `ReportMouse` instance depending on the value of subclass. If no mouse is found
-      None is returned.
+      SUBCLASS_RESERVED (0x00), a non-boot (report) mouse will be searched for
+    :return: A tupple cotaining the arguments needed by the calling find and init helper
+      function. If no mouse is found None is returned.
     """
     mouse_interface_index, mouse_endpoint_address = None, None
     mouse_device = None
@@ -261,12 +260,11 @@ class BootMouse:
         Release the mouse cursor and re-attach it to the kernel
         if it was attached previously.
         """
-        # was_attached is an empty list if no interfaces were detached from the kernel
-        if self.was_attached:
-            # was_attached is a list of detached interfaces
-            for intf in self.was_attached:
-                if not self.device.is_kernel_driver_active(intf):
-                    self.device.attach_kernel_driver(intf)
+        # was_attached is a list of interfaces detached from the kernel or 
+        # an empty list if no interfaces were detached
+        for intf in self.was_attached:
+            if not self.device.is_kernel_driver_active(intf):
+                self.device.attach_kernel_driver(intf)
 
     def update(self):
         """
