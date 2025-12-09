@@ -260,7 +260,7 @@ class BootMouse:
         Release the mouse cursor and re-attach it to the kernel
         if it was attached previously.
         """
-        # was_attached is a list of interfaces detached from the kernel or 
+        # was_attached is a list of interfaces detached from the kernel or
         # an empty list if no interfaces were detached
         for intf in self.was_attached:
             if not self.device.is_kernel_driver_active(intf):
