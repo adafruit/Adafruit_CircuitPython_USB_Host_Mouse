@@ -60,7 +60,7 @@ def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT):
     :param subclass: Defines whether to search for boot or non-boot mice.
       SUBCLASS_BOOT (0X01), a boot mouse will be searched for
       SUBCLASS_RESERVED (0x00), a non-boot (report) mouse will be searched for
-    :return: A tupple cotaining the arguments needed by the calling find and init helper
+    :return: A tuple containing the arguments needed by the calling find and init helper
       function. If no mouse is found None is returned.
     """
     mouse_interface_index, mouse_endpoint_address = None, None
