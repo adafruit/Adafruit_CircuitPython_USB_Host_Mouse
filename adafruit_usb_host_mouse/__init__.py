@@ -177,7 +177,7 @@ def find_and_init_report_mouse(cursor_image=DEFAULT_CURSOR, scale=1):
 
 class BootMouse:
     """
-    Helpler class that encapsulates the objects needed to interact with a boot
+    Helper class that encapsulates the objects needed to interact with a boot
     mouse, show a visible cursor on the display, and determine when buttons
     were pressed.
 
@@ -318,7 +318,7 @@ class BootMouse:
 
 class ReportMouse(BootMouse):
     """
-    Helpler class that encapsulates the objects needed to interact with a non-Boot
+    Helper class that encapsulates the objects needed to interact with a non-Boot
     mouse (Report), show a visible cursor on the display, and determine when buttons
     were pressed. The class is a subclass of BootMouse that overrides the update method.
 
