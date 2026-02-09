@@ -29,11 +29,17 @@ Implementation Notes
 # * Adafruit's Register library: https://github.com/adafruit/Adafruit_CircuitPython_Register
 """
 
+try:
+    import supervisor
+except ImportError:
+    BLINKA = True
+else:
+    BLINKA = False
+
 import array
 from traceback import print_exception
 
 import adafruit_usb_host_descriptors
-import supervisor
 import usb
 from displayio import OnDiskBitmap, TileGrid
 
@@ -217,13 +223,16 @@ class BootMouse:
         which buttons are currently pressed."""
 
         if tilegrid is not None:
-            self.display_size = (
-                supervisor.runtime.display.width,
-                supervisor.runtime.display.height,
-            )
-            self.tilegrid.x, self.tilegrid.y = (
-                x // 2 for x in self.display_size
-            )  # center cursor in display
+            if not BLINKA:
+                self.display_size = (
+                    supervisor.runtime.display.width,
+                    supervisor.runtime.display.height,
+                )
+                self.tilegrid.x, self.tilegrid.y = (
+                    x // 2 for x in self.display_size
+                )  # center cursor in display
+            else:
+                self.tilegrid.x, self.tilegrid.y = 0
         else:
             self._x, self._y = 0, 0
 
