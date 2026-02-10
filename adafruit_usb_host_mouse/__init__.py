@@ -217,7 +217,7 @@ class BootMouse:
 
         if tilegrid is not None:
             try:
-                import supervisor
+                import supervisor  # noqa: PLC0415
             except ImportError:
                 self.tilegrid.x, self.tilegrid.y = 0
             else:
