@@ -32,9 +32,10 @@ Implementation Notes
 import array
 from traceback import print_exception
 
+import adafruit_imageload
 import adafruit_usb_host_descriptors
 import usb
-from displayio import OnDiskBitmap, TileGrid
+from displayio import Bitmap, Palette, TileGrid
 
 __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_USB_Host_Mouse.git"
@@ -119,13 +120,15 @@ def find_and_init_mouse(cursor_image=DEFAULT_CURSOR, subclass=SUBCLASS_BOOT):
         # load the mouse cursor bitmap
         mouse_tg = None
         if isinstance(cursor_image, str):
-            mouse_bmp = OnDiskBitmap(cursor_image)
+            mouse_bmp, mouse_palette = adafruit_imageload.load(
+                cursor_image, bitmap=Bitmap, palette=Palette
+            )
 
             # make the background pink pixels transparent
-            mouse_bmp.pixel_shader.make_transparent(0)
+            mouse_palette.make_transparent(0)
 
             # create a TileGrid for the mouse, using its bitmap and pixel_shader
-            mouse_tg = TileGrid(mouse_bmp, pixel_shader=mouse_bmp.pixel_shader)
+            mouse_tg = TileGrid(mouse_bmp, pixel_shader=mouse_palette)
 
         return (
             (mouse_device, mouse_interface_index, mouse_endpoint_address, mouse_was_attached),
@@ -268,7 +271,10 @@ class BootMouse:
         # an empty list if no interfaces were detached
         for intf in self.was_attached:
             if not self.device.is_kernel_driver_active(intf):
-                self.device.attach_kernel_driver(intf)
+                try:
+                    self.device.attach_kernel_driver(intf)
+                except usb.core.USBError:
+                    pass
 
     def update(self):
         """
